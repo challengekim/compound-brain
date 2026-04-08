@@ -55,33 +55,31 @@
 
 Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**로 사용. 이 봇은 AI를 질문하는 대상이 아니라 백그라운드에서 작동하는 인프라로 취급합니다 — 이메일을 읽고, vault를 스캔하고, LinkedIn 포스트를 쓰고, 자신의 성능을 진단합니다.
 
-#### 6. Karpathy의 Autoresearch — 스킬 자기 개선
+### 전체 생태계 구성
 
-Karpathy의 [autoresearch](https://github.com/karpathy/autoresearch) 개념: AI가 자신의 출력을 평가하고 반복적으로 개선. 이 프로젝트는 이를 지식 관리 스킬에 적용합니다:
+이 봇은 더 큰 지식 관리 시스템의 한 조각입니다. 각 레이어가 하는 일:
 
-- **피드백 로깅**: `/save`, `/learn` 등의 스킬이 잘못된 출력을 내면 `skill-feedback.jsonl`에 자동 기록
-- **자동 수정**: 같은 스킬에 3건 이상 이슈가 쌓이면 `/skill-eval --fix`가 피드백을 읽고 스킬을 수정
-- **변이 루프**: 스킬을 테스트 → 평가 → 변이 → 재평가, 95%+ 달성까지 반복
+| 레이어 | 역할 | 독립 실행? |
+|--------|------|:---------:|
+| **PKM Briefing Bot** (이 레포) | 자동 브리핑, 트렌드 큐레이션, 복리 학습 루프, 메타 리뷰 | Yes |
+| **Claude Code + OMC** | `/save` 콘텐츠 캡처, `/wiki` 지식 베이스, `/skill-eval` 자기개선, `/learn` 교훈 추적 | [Claude Code](https://claude.ai/claude-code) 필요 |
+| **마크다운 Vault** | 지식 저장소 (Obsidian, Logseq, VS Code, 아무 폴더) | Yes |
 
-**지식을 캡처하는 도구 자체가 시간이 지날수록 좋아집니다.**
+### 영감을 준 소스들
 
-#### 7. LLM Wiki (Karpathy의 "LLM이 지식을 컴파일" 패턴)
+이 시스템은 온라인에서 찾아서 공부하고 조합·적용한 아이디어들입니다:
 
-RAG(검색 증강 생성) 대신, LLM 자체가 마크다운 위키를 점진적으로 구축·유지합니다:
+| 개념 | 출처 | 적용 방법 |
+|------|------|----------|
+| **LLM Wiki** | [Karpathy X 포스트](https://x.com/karpathy/status/2039805659525644595) — RAG 대신 LLM이 .md 위키 컴파일 | OMC `/wiki` 스킬로 구현. 119개 아티클 자동 인덱싱 + 상호 참조 |
+| **Autoresearch** | [autoimprove-cc](https://github.com/learnbydoingai/autoimprove-cc) — Karpathy autoresearch를 스킬에 적용 | OMC `/skill-eval`로 구현. 스킬 실패 시 자동 평가 + 자기 수정 |
+| **복리 지식** | [retn.kr](https://retn.kr/blog/compound-learning-ai-system/) — 에피소딕 메모리 + 4단계 루프 | 주간 리포트 연속성으로 구현: 매주 지난주 리포트를 입력받아 누적 분석 |
+| **BASB** | Tiago Forte — Capture, Organize, Distill, Express | `/save`가 캡처+분류, 봇이 증류+표현 |
+| **제텔카스텐** | Niklas Luhmann — 상호 연결된 노트 | 태그 공통점 분석으로 노트 간 실제 연결 발견 |
+| **GTD** | David Allen — 액션 아이템 캡처 | 이메일/미팅 요약에서 정규식으로 액션 자동 추출 |
+| **LLM OS** | Andrej Karpathy — LLM을 운영체제 레이어로 | AI가 백그라운드 크론 인프라로 동작 |
 
-- 아티클이 자동 인덱싱되고 `[[위키 링크]]`로 상호 참조
-- 새 아티클 작성 전에 기존 아티클을 읽어 중복 방지
-- 벡터 DB가 아니라 위키가 LLM의 장기 기억 — 세션을 넘어 지식이 복리로 축적
-
-#### 8. Learning System — 프로젝트 간 교훈 누적
-
-한 프로젝트에서 배운 교훈이 자동으로 모든 프로젝트에 적용됩니다:
-
-1. **세션 → 프로젝트**: 어려운 버그를 해결하면 `/learn`이 교훈 캡처
-2. **프로젝트 → 전역**: 교훈이 2개 이상 프로젝트에 적용되면 글로벌 룰로 승격
-3. **전역 → 아카이브**: 오래된 교훈(180일+)은 vault로 아카이브
-
-**개인 엔지니어링 지식 베이스**가 모든 프로젝트에 걸쳐 복리로 쌓입니다.
+> **참고**: Claude Code 동반 레이어(LLM Wiki, Autoresearch, Learning System)는 [Claude Code](https://claude.ai/claude-code) + [oh-my-claudecode](https://github.com/nicobailarew/oh-my-claudecode) 플러그인이 필요합니다. 봇 자체(1-5)는 독립 실행됩니다.
 
 ### 각 도구에서 뭘 가져왔고, 뭘 바꿨나
 

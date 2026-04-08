@@ -53,33 +53,31 @@ David Allen's core principle: your brain is for having ideas, not holding them. 
 
 Andrej Karpathy's vision of LLMs as an operating system layer for human work. This bot treats AI not as a chatbot you query, but as infrastructure that works in the background -- it reads your emails, scans your vault, writes your LinkedIn posts, and diagnoses its own performance.
 
-#### 6. Karpathy's Autoresearch — Self-Improving Skills
+### The Full Ecosystem
 
-Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) concept: AI systems that evaluate their own outputs and iteratively improve. This project applies it to knowledge management skills:
+This bot is one piece of a larger knowledge management system. Here's what each layer does:
 
-- **Feedback logging**: When a skill (`/save`, `/learn`, etc.) produces broken output, the issue is logged to `skill-feedback.jsonl` automatically
-- **Auto-fix trigger**: When 3+ issues accumulate for the same skill, `/skill-eval --fix` reads the feedback and patches the skill
-- **Mutation loop**: The skill is tested, evaluated, mutated, and re-evaluated until it scores 95%+
+| Layer | What It Is | Standalone? |
+|-------|-----------|:-----------:|
+| **PKM Briefing Bot** (this repo) | Automated briefings, trend curation, compound learning loop, meta-review | Yes |
+| **Claude Code + OMC** | `/save` content capture, `/wiki` knowledge base, `/skill-eval` auto-improvement, `/learn` lesson tracking | Requires [Claude Code](https://claude.ai/claude-code) |
+| **Markdown Vault** | Knowledge storage (Obsidian, Logseq, VS Code, or any folder) | Yes |
 
-This means the tools you use to capture knowledge **get better over time** without manual intervention.
+### Inspirations and Sources
 
-#### 7. LLM Wiki (Karpathy's "LLM compiles your knowledge" pattern)
+This system combines ideas from online sources we found, studied, and implemented:
 
-Instead of RAG (retrieval-augmented generation), this system uses the LLM itself to compile and maintain a persistent markdown wiki. The wiki grows incrementally across sessions:
+| Concept | Source | How We Applied It |
+|---------|--------|-------------------|
+| **LLM Wiki** | [Karpathy's X post](https://x.com/karpathy/status/2039805659525644595) — LLM compiles .md wiki, not RAG | Implemented via OMC `/wiki` skill. 119 articles auto-indexed with cross-references |
+| **Autoresearch** | [autoimprove-cc](https://github.com/learnbydoingai/autoimprove-cc) — Karpathy's autoresearch for skills | Implemented via OMC `/skill-eval`. Skills auto-evaluate and self-improve on failure |
+| **Compound Knowledge** | [retn.kr](https://retn.kr/blog/compound-learning-ai-system/) — Episodic memory + 4-stage loop | Implemented as weekly report continuity: each week receives last week's report as input |
+| **Building a Second Brain** | Tiago Forte — Capture, Organize, Distill, Express | `/save` captures + auto-categorizes; bot distills and expresses via briefings |
+| **Zettelkasten** | Niklas Luhmann — Interconnected notes | Tag co-occurrence analysis finds real connections between notes |
+| **GTD** | David Allen — Capture action items, not hold them | Regex extraction of action items from every email/meeting summary |
+| **LLM OS** | Andrej Karpathy — LLM as operating system layer | AI runs as background cron infrastructure, not a chatbot |
 
-- Articles are auto-indexed and cross-referenced with `[[wiki-links]]`
-- The LLM reads existing articles before writing new ones, avoiding duplication
-- Knowledge compounds because the wiki is the LLM's long-term memory, not a vector database
-
-#### 8. Learning System — Cross-Project Lesson Accumulation
-
-Lessons learned in one project automatically become available in all projects:
-
-1. **Session → Project**: After solving a hard bug, `/learn` captures the lesson
-2. **Project → Global**: When a lesson applies to 2+ projects, it promotes to global rules
-3. **Global → Archive**: Stale lessons (>180 days) archive to the vault for historical reference
-
-This creates a **personal engineering knowledge base** that compounds across every project you work on.
+> **Note**: Features 6-8 in the Claude Code companion layer (LLM Wiki, Autoresearch, Learning System) require [Claude Code](https://claude.ai/claude-code) with the [oh-my-claudecode](https://github.com/nicobailarew/oh-my-claudecode) plugin. The bot itself (features 1-5) works independently.
 
 ### What We Took From Each Tool — and What We Changed
 
