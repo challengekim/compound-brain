@@ -118,6 +118,15 @@ The meta-review diagnoses the system: what categories you're neglecting, which s
 3. Week 3: Tag analysis connects Week 1 and Week 3 notes via shared tags → AI traces a 3-week evolution of your interests → cumulative trend section shows where your learning is heading
 4. Month-end: Meta-review checks which of the 6 suggested ideas actually became git commits → reports 33% conversion rate → suggests focusing on the themes that led to action
 
+### Two Ways to Run — With or Without API Key
+
+| Mode | API Key? | Cost | Quality | Setup |
+|------|:--------:|:----:|---------|-------|
+| **Ollama (local)** | **No** | **$0** | Good (depends on model) | Install Ollama + pull a model |
+| **Gemini (cloud)** | Free key | **$0** | Very good | Get key at aistudio.google.com |
+| OpenRouter | Free key | $0-5 | Model-dependent | 100+ models, some free |
+| OpenAI / Claude | Paid key | $0.5-15 | Best | For power users |
+
 ### Cost Comparison
 
 | Tool | Monthly Cost | What You Get |
@@ -125,37 +134,50 @@ The meta-review diagnoses the system: what categories you're neglecting, which s
 | Readwise | $8 | Highlight sync + review |
 | Notion AI | $10 | Note summarization |
 | Feedly Pro | $6 | RSS aggregation |
-| **This bot** | **~$1-3** | **All of the above + auto-analysis + self-improvement** |
-
-*Costs: Gemini API (~$1-3/mo at typical usage) + free hosting tier or ~$5/mo for Railway/Docker.*
+| **This bot (Ollama)** | **$0** | **All of the above + compound analysis** |
+| **This bot (Gemini)** | **$0** | **Same, cloud-quality AI** |
 
 ---
 
 ## Quick Start
 
-### Option 1: Guided Setup (Recommended)
+**Runs locally on your machine. No server or deployment needed.**
+
+### With Ollama (no API key, 100% free)
+
+```bash
+# 1. Install Ollama (https://ollama.com)
+ollama pull llama3.1:8b
+
+# 2. Clone and set up
+git clone https://github.com/challengekim/pkm-briefing-bot
+cd pkm-briefing-bot
+pip install -r requirements.txt
+python3 setup_wizard.py        # Select "Ollama" → no API key needed
+
+# 3. Run
+python3 main.py --test trend   # Test it
+python3 main.py                # Run scheduler (keeps running in terminal)
+```
+
+### With Gemini (free API key, better quality)
 
 ```bash
 git clone https://github.com/challengekim/pkm-briefing-bot
 cd pkm-briefing-bot
 pip install -r requirements.txt
-python3 setup_wizard.py
+python3 setup_wizard.py        # Select "Gemini" → paste free key from aistudio.google.com
 python3 main.py --test trend
+python3 main.py
 ```
 
-### Option 2: Manual Setup
-
-1. Copy `config.example.yaml` to `config.yaml` and fill in your values
-2. Copy `.env.example` to `.env` and add your API keys
-3. Test: `python3 main.py --test trend`
-
-### Option 3: Docker
+### Optional: Run in background
 
 ```bash
-# First, set up credentials locally:
-python3 setup_wizard.py
+# Keep running after closing terminal
+nohup python3 main.py &
 
-# Then run with Docker:
+# Or use Docker (optional, not required)
 docker-compose up -d
 ```
 
@@ -227,30 +249,29 @@ See [`vault_template/`](vault_template/) for the expected folder structure.
 ## Requirements
 
 - Python 3.9+
-- Gemini API key ([free tier available](https://aistudio.google.com/apikey))
 - Telegram bot ([free, 2 minutes to create](https://core.telegram.org/bots#botfather))
+- **One of** (choose during setup):
+  - [Ollama](https://ollama.com) installed locally — **no API key, $0**
+  - [Gemini API key](https://aistudio.google.com/apikey) — **free tier, $0**
+  - OpenRouter / OpenAI / Claude API key — paid
 
 ---
 
-## Deployment
+## Running
 
-### Local
-
-```bash
-python3 main.py
-```
-
-### Docker
+This runs **locally on your machine**. No server needed.
 
 ```bash
-docker-compose up -d
+python3 main.py                # Runs scheduler (keeps running)
+nohup python3 main.py &        # Run in background
 ```
 
-### Railway
+**Optional** (for always-on without your laptop):
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
-
-Set environment variables in the Railway dashboard and add `config.yaml` as a mounted file.
+```bash
+docker-compose up -d            # Docker
+# or deploy to Railway / Render / any VPS
+```
 
 ---
 

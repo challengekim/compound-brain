@@ -118,6 +118,15 @@ Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**
 3. 3주차: 태그 분석이 1주차와 3주차 노트를 공유 태그로 연결 → AI가 3주간 관심사 변화를 추적 → 누적 트렌드 섹션이 학습 방향을 보여줌
 4. 월말: 메타 리뷰가 제안된 6개 아이디어 중 실제 git 커밋이 된 것을 확인 → 33% 전환율 보고 → 행동으로 이어진 테마에 집중 제안
 
+### API key 있을 때 / 없을 때
+
+| 모드 | API Key? | 비용 | 품질 | 설정 |
+|------|:--------:|:----:|------|------|
+| **Ollama (로컬)** | **불필요** | **$0** | 좋음 (모델 따라) | Ollama 설치 + 모델 다운 |
+| **Gemini (클라우드)** | 무료 발급 | **$0** | 매우 좋음 | aistudio.google.com에서 키 발급 |
+| OpenRouter | 무료 발급 | $0~5 | 모델 따라 | 100+ 모델, 무료 모델 포함 |
+| OpenAI / Claude | 유료 | $0.5~15 | 최상 | 파워 유저용 |
+
 ### 비용 비교
 
 | 도구 | 월 비용 | 제공 기능 |
@@ -125,37 +134,49 @@ Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**
 | Readwise | $8 | 하이라이트 동기화 + 복습 |
 | Notion AI | $10 | 노트 요약 |
 | Feedly Pro | $6 | RSS 수집 |
-| **이 봇** | **~$1-3** | **위 전부 + 자동 분석 + 자기 개선** |
-
-*비용: Gemini API (~$1-3/월) + 무료 호스팅 티어 또는 Railway/Docker ~$5/월.*
+| **이 봇 (Ollama)** | **$0** | **위 전부 + 복리 분석** |
+| **이 봇 (Gemini)** | **$0** | **위 전부 + 클라우드 AI** |
 
 ---
 
 ## 빠른 시작
 
-### 방법 1: 가이드 설정 (권장)
+**로컬에서 실행합니다. 서버 배포 필요 없음.**
+
+### Ollama로 시작 (API key 없이, 완전 무료)
+
+```bash
+# 1. Ollama 설치 (https://ollama.com)
+ollama pull llama3.1:8b
+
+# 2. 클론 + 설정
+git clone https://github.com/challengekim/pkm-briefing-bot
+cd pkm-briefing-bot
+pip install -r requirements.txt
+python3 setup_wizard.py        # "Ollama" 선택 → API key 입력 없음
+
+# 3. 실행
+python3 main.py --test trend   # 테스트
+python3 main.py                # 스케줄러 실행 (터미널에서 계속 돌아감)
+```
+
+### Gemini로 시작 (무료 API key, 더 좋은 품질)
 
 ```bash
 git clone https://github.com/challengekim/pkm-briefing-bot
 cd pkm-briefing-bot
 pip install -r requirements.txt
-python3 setup_wizard.py
+python3 setup_wizard.py        # "Gemini" 선택 → aistudio.google.com 무료 키 입력
 python3 main.py --test trend
+python3 main.py
 ```
 
-### 방법 2: 수동 설정
-
-1. `config.example.yaml`을 `config.yaml`로 복사하고 값을 채우세요
-2. `.env.example`을 `.env`로 복사하고 API 키를 넣으세요
-3. 테스트: `python3 main.py --test trend`
-
-### 방법 3: Docker
+### 선택사항: 백그라운드 실행
 
 ```bash
-# 먼저 로컬에서 설정:
-python3 setup_wizard.py
+nohup python3 main.py &        # 터미널 닫아도 계속 실행
 
-# Docker로 실행:
+# 또는 Docker (선택사항, 필수 아님)
 docker-compose up -d
 ```
 
@@ -220,28 +241,29 @@ config.yaml + .env
 ## 필요 사항
 
 - Python 3.9+
-- Gemini API 키 ([무료 티어 가능](https://aistudio.google.com/apikey))
 - Telegram 봇 ([무료, 2분이면 생성](https://core.telegram.org/bots#botfather))
+- **다음 중 하나** (설정 시 선택):
+  - [Ollama](https://ollama.com) 로컬 설치 — **API key 불필요, $0**
+  - [Gemini API 키](https://aistudio.google.com/apikey) — **무료 티어, $0**
+  - OpenRouter / OpenAI / Claude API 키 — 유료
 
 ---
 
-## 배포
+## 실행
 
-### 로컬
+**로컬에서 실행합니다.** 서버 필요 없음.
+
 ```bash
-python3 main.py
+python3 main.py                # 스케줄러 실행 (계속 돌아감)
+nohup python3 main.py &        # 백그라운드 실행
 ```
 
-### Docker
+**선택사항** (노트북 끄고도 계속 돌리려면):
+
 ```bash
-docker-compose up -d
+docker-compose up -d            # Docker
+# 또는 Railway / Render / 아무 VPS에 배포
 ```
-
-### Railway
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
-
-Railway 대시보드에서 환경변수를 설정하고 `config.yaml`을 마운트하세요.
 
 ---
 
