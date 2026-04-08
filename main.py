@@ -298,7 +298,7 @@ def process_morning():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     email_summaries, action_items, email_status = _fetch_email_summaries(config, summarizer)
@@ -335,7 +335,7 @@ def process_evening():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     email_summaries, _, email_status = _fetch_email_summaries(config, summarizer)
@@ -364,7 +364,7 @@ def process_trend_digest():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     items = fetch_all_trends(config)
@@ -400,7 +400,7 @@ def process_weekly_knowledge():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     notes = scan_recent_notes(config, days=7)
@@ -456,7 +456,7 @@ def process_linkedin_draft():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     # Collect all vault notes (no date cutoff)
@@ -492,7 +492,7 @@ def process_meta_review():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     stats = collect_monthly_stats(config, days=30)
@@ -531,7 +531,7 @@ def process_weekly():
     if not _validate_config(config):
         return
 
-    summarizer = Summarizer(config.gemini_api_key, lang=config.language)
+    summarizer = Summarizer(config=config, lang=config.language)
     telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
 
     now = datetime.now(KST)

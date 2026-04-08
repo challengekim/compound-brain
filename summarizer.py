@@ -1,17 +1,46 @@
 import logging
 from pathlib import Path
 
-from google import genai
-
 logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts"
 
 
 class Summarizer:
-    def __init__(self, api_key, lang="ko"):
-        self.client = genai.Client(api_key=api_key)
+    def __init__(self, config=None, api_key=None, lang="ko"):
+        """Initialize with either a Config object or legacy api_key string."""
         self.lang = lang
+
+        if config:
+            self._provider = config.llm_provider
+            self._model = config.llm_model
+            self._api_key = config.llm_api_key
+            self._base_url = config.llm_base_url
+        else:
+            # Legacy: api_key string = Gemini
+            self._provider = "gemini"
+            self._model = "gemini-2.5-flash"
+            self._api_key = api_key or ""
+            self._base_url = None
+
+        self._client = None  # lazy init
+
+    def _get_client(self):
+        if self._client is not None:
+            return self._client
+
+        if self._provider == "gemini":
+            from google import genai
+            self._client = genai.Client(api_key=self._api_key)
+        else:
+            # OpenAI-compatible: openai, openrouter, ollama
+            from openai import OpenAI
+            kwargs = {"api_key": self._api_key or "ollama"}
+            if self._base_url:
+                kwargs["base_url"] = self._base_url
+            self._client = OpenAI(**kwargs)
+
+        return self._client
 
     def _load_prompt(self, name):
         """Load a prompt template file. Falls back to Korean if target language not found."""
@@ -28,14 +57,24 @@ class Summarizer:
         return prompt_file.read_text(encoding="utf-8")
 
     def _generate(self, prompt):
-        """Call Gemini API with a prompt."""
+        """Call the configured LLM provider."""
         try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
-            return response.text
+            client = self._get_client()
+
+            if self._provider == "gemini":
+                response = client.models.generate_content(
+                    model=self._model, contents=prompt
+                )
+                return response.text
+            else:
+                # OpenAI-compatible API
+                response = client.chat.completions.create(
+                    model=self._model,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return response.choices[0].message.content
         except Exception as e:
-            logger.error(f"Gemini API call failed: {e}")
+            logger.error(f"LLM call failed ({self._provider}/{self._model}): {e}")
             return f"(Generation failed: {e})"
 
     def summarize_newsletter(self, subject, body, sender):
@@ -191,25 +230,20 @@ class Summarizer:
         prompt = self._load_prompt("translate_titles").format(
             titles_text=titles_text
         )
-        try:
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
-            )
-            translations = {}
-            for line in response.text.strip().split("\n"):
-                line = line.strip()
-                if not line:
-                    continue
-                # Parse "0. 번역된 제목" format
-                parts = line.split(". ", 1)
-                if len(parts) == 2 and parts[0].strip().isdigit():
-                    idx = int(parts[0].strip())
-                    if 0 <= idx < len(english_items):
-                        translations[english_items[idx]["title"]] = parts[1].strip()
-            return translations
-        except Exception as e:
-            logger.error(f"Title translation failed: {e}")
+        result = self._generate(prompt)
+        if result.startswith("(Generation failed:"):
             return {}
+        translations = {}
+        for line in result.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(". ", 1)
+            if len(parts) == 2 and parts[0].strip().isdigit():
+                idx = int(parts[0].strip())
+                if 0 <= idx < len(english_items):
+                    translations[english_items[idx]["title"]] = parts[1].strip()
+        return translations
 
     @staticmethod
     def _is_korean(text):

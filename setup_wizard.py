@@ -19,11 +19,63 @@ def main():
     lang = input("Language (ko/en) [ko]: ").strip() or "ko"
     config["language"] = lang
 
-    # 2. Gemini API Key
-    print("\n--- Gemini API ---")
-    print("Get your API key at: https://aistudio.google.com/apikey")
-    api_key = input("Gemini API Key: ").strip()
-    env["GEMINI_API_KEY"] = api_key
+    # 2. LLM Provider
+    print("\n--- AI Model ---")
+    print("Choose your LLM provider:\n")
+    print("  1. Gemini (recommended, free tier available)")
+    print("     → Free: 1,500 requests/day, no credit card needed")
+    print("     → Get key: https://aistudio.google.com/apikey\n")
+    print("  2. OpenRouter (100+ models, some free)")
+    print("     → Free models: Gemini Flash, Llama, Mistral")
+    print("     → Get key: https://openrouter.ai/keys\n")
+    print("  3. OpenAI (gpt-4o-mini ~$0.5/mo)")
+    print("     → Get key: https://platform.openai.com/api-keys\n")
+    print("  4. Ollama (100% free, runs locally)")
+    print("     → Install: https://ollama.com")
+    print("     → Then: ollama pull llama3.1:8b\n")
+
+    choice = input("Select provider [1]: ").strip() or "1"
+
+    provider_map = {"1": "gemini", "2": "openrouter", "3": "openai", "4": "ollama"}
+    provider = provider_map.get(choice, "gemini")
+
+    default_models = {
+        "gemini": "gemini-2.5-flash",
+        "openrouter": "google/gemini-2.5-flash-preview-05-20:free",
+        "openai": "gpt-4o-mini",
+        "ollama": "llama3.1:8b",
+    }
+
+    config["llm"] = {"provider": provider}
+
+    if provider == "ollama":
+        print(f"\nDefault model: {default_models['ollama']}")
+        model = input(f"Model name [{default_models['ollama']}]: ").strip()
+        if model:
+            config["llm"]["model"] = model
+        print("No API key needed for Ollama.")
+        print("Make sure Ollama is running: ollama serve")
+    else:
+        if provider == "gemini":
+            print(f"\nGet your free API key at: https://aistudio.google.com/apikey")
+            print("(Free tier: 1,500 requests/day — more than enough)")
+        elif provider == "openrouter":
+            print(f"\nGet your API key at: https://openrouter.ai/keys")
+            print("Free models available — no payment needed")
+            print(f"\nPopular free models:")
+            print("  google/gemini-2.5-flash-preview-05-20:free (recommended)")
+            print("  meta-llama/llama-3.3-70b-instruct:free")
+            print("  mistralai/mistral-small-3.1-24b-instruct:free")
+            model = input(f"\nModel [{default_models['openrouter']}]: ").strip()
+            if model:
+                config["llm"]["model"] = model
+        elif provider == "openai":
+            print(f"\nGet your API key at: https://platform.openai.com/api-keys")
+
+        api_key = input("API Key: ").strip()
+
+        env_key = "GEMINI_API_KEY" if provider == "gemini" else "LLM_API_KEY"
+        env[env_key] = api_key
 
     # 3. Telegram Bot
     print("\n--- Telegram Bot ---")

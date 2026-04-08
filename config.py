@@ -28,6 +28,13 @@ class Config:
         self.personal_calendar_id = os.getenv("PERSONAL_CALENDAR_ID", "primary")
         self.work_calendar_id = os.getenv("WORK_CALENDAR_ID", "primary")
 
+        # LLM
+        llm = cfg.get("llm", {})
+        self.llm_provider = llm.get("provider", "gemini")
+        self.llm_model = llm.get("model", self._default_model(self.llm_provider))
+        self.llm_api_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY", "")
+        self.llm_base_url = llm.get("base_url", self._default_base_url(self.llm_provider))
+
         # Language
         self.language = cfg.get("language", "ko")
         patterns = cfg.get("language_patterns", {})
@@ -153,3 +160,19 @@ class Config:
                 kwargs["day"] = day
 
         return kwargs
+
+    @staticmethod
+    def _default_model(provider):
+        return {
+            "gemini": "gemini-2.5-flash",
+            "openai": "gpt-4o-mini",
+            "openrouter": "google/gemini-2.5-flash-preview-05-20:free",
+            "ollama": "llama3.1:8b",
+        }.get(provider, "gemini-2.5-flash")
+
+    @staticmethod
+    def _default_base_url(provider):
+        return {
+            "openrouter": "https://openrouter.ai/api/v1",
+            "ollama": "http://localhost:11434/v1",
+        }.get(provider)
