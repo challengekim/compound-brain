@@ -1,0 +1,21 @@
+Below is a list of knowledge notes saved this week.
+
+Saved notes ({note_count} items):
+{notes_text}
+
+[Project Context]
+{project_context}
+
+Please write a weekly knowledge compound report in the following format:
+
+1. Key Themes This Week (up to 3)
+   - Recurring topics or patterns from saved notes
+
+2. Actionable Insights by Project
+   - 1-2 specific actions that can be applied to each project
+
+3. Connected Knowledge
+   - Connections or synergies discovered between this week's notes
+
+4. Keywords to Watch Next Week
+   - Topics worth following next week based on this week's trends

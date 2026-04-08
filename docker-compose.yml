@@ -1,0 +1,8 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ${VAULT_PATH:-./vault}:/app/vault:ro
+    restart: unless-stopped
