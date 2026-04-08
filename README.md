@@ -53,6 +53,34 @@ David Allen's core principle: your brain is for having ideas, not holding them. 
 
 Andrej Karpathy's vision of LLMs as an operating system layer for human work. This bot treats AI not as a chatbot you query, but as infrastructure that works in the background -- it reads your emails, scans your vault, writes your LinkedIn posts, and diagnoses its own performance.
 
+#### 6. Karpathy's Autoresearch — Self-Improving Skills
+
+Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) concept: AI systems that evaluate their own outputs and iteratively improve. This project applies it to knowledge management skills:
+
+- **Feedback logging**: When a skill (`/save`, `/learn`, etc.) produces broken output, the issue is logged to `skill-feedback.jsonl` automatically
+- **Auto-fix trigger**: When 3+ issues accumulate for the same skill, `/skill-eval --fix` reads the feedback and patches the skill
+- **Mutation loop**: The skill is tested, evaluated, mutated, and re-evaluated until it scores 95%+
+
+This means the tools you use to capture knowledge **get better over time** without manual intervention.
+
+#### 7. LLM Wiki (Karpathy's "LLM compiles your knowledge" pattern)
+
+Instead of RAG (retrieval-augmented generation), this system uses the LLM itself to compile and maintain a persistent markdown wiki. The wiki grows incrementally across sessions:
+
+- Articles are auto-indexed and cross-referenced with `[[wiki-links]]`
+- The LLM reads existing articles before writing new ones, avoiding duplication
+- Knowledge compounds because the wiki is the LLM's long-term memory, not a vector database
+
+#### 8. Learning System — Cross-Project Lesson Accumulation
+
+Lessons learned in one project automatically become available in all projects:
+
+1. **Session → Project**: After solving a hard bug, `/learn` captures the lesson
+2. **Project → Global**: When a lesson applies to 2+ projects, it promotes to global rules
+3. **Global → Archive**: Stale lessons (>180 days) archive to the vault for historical reference
+
+This creates a **personal engineering knowledge base** that compounds across every project you work on.
+
 ### What We Took From Each Tool — and What We Changed
 
 | Tool / Method | What It Does Well | What's Missing | How This Bot Improves It |
