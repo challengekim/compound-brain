@@ -1,6 +1,6 @@
 # Claude Code Skills Bundle
 
-Companion skills for the PKM Briefing Bot. These add `/save`, `/learn`, and `/recall` commands to [Claude Code](https://claude.ai/claude-code).
+Companion skills for the Compound Brain. These add `/save`, `/learn`, and `/recall` commands to [Claude Code](https://claude.ai/claude-code).
 
 ## Skills
 
@@ -22,7 +22,7 @@ bash install.sh
 ### One-liner
 
 ```bash
-curl -sL https://raw.githubusercontent.com/user/pkm-briefing-bot/main/skills/install.sh | bash
+curl -sL https://raw.githubusercontent.com/user/compound-brain/main/skills/install.sh | bash
 ```
 
 ### Manual

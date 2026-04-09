@@ -1,4 +1,4 @@
-# Project: PKM Briefing Bot
+# Project: Compound Brain
 
 ## Overview
 Automated personal knowledge management system. Sends scheduled briefings (trend, knowledge, meta review, LinkedIn draft) via Telegram.

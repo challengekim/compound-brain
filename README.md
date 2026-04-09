@@ -1,4 +1,4 @@
-# PKM Briefing Bot
+# Compound Brain
 
 **A self-improving personal knowledge management system that reads, collects, summarizes, connects, suggests, and evolves -- automatically.**
 
@@ -52,7 +52,7 @@ This bot is one piece of a larger knowledge management system. Here's what each 
 
 | Layer | What It Is | Standalone? |
 |-------|-----------|:-----------:|
-| **PKM Briefing Bot** (this repo) | Automated briefings, trend curation, compound learning loop, meta-review | Yes |
+| **Compound Brain** (this repo) | Automated briefings, trend curation, compound learning loop, meta-review | Yes |
 | **Claude Code + OMC** | `/save` content capture, `/wiki` knowledge base, `/skill-eval` auto-improvement, `/learn` lesson tracking | Requires [Claude Code](https://claude.ai/claude-code) |
 | **Markdown Vault** | Knowledge storage (Obsidian, Logseq, VS Code, or any folder) | Yes |
 
@@ -150,8 +150,8 @@ The meta-review diagnoses the system: what categories you're neglecting, which s
 ollama pull llama3.1:8b
 
 # 2. Clone and set up
-git clone https://github.com/challengekim/pkm-briefing-bot
-cd pkm-briefing-bot
+git clone https://github.com/challengekim/compound-brain
+cd compound-brain
 pip install -r requirements.txt
 python3 setup_wizard.py        # Select "Ollama" → no API key needed
 
@@ -163,8 +163,8 @@ python3 main.py                # Run scheduler (keeps running in terminal)
 ### With Gemini (free API key, better quality)
 
 ```bash
-git clone https://github.com/challengekim/pkm-briefing-bot
-cd pkm-briefing-bot
+git clone https://github.com/challengekim/compound-brain
+cd compound-brain
 pip install -r requirements.txt
 python3 setup_wizard.py        # Select "Gemini" → paste free key from aistudio.google.com
 python3 main.py --test trend

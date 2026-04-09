@@ -1,4 +1,4 @@
-# PKM Briefing Bot
+# Compound Brain
 
 **읽고, 모으고, 요약하고, 연결하고, 제안하고, 스스로 진화하는 — 개인 지식 관리 자동화 시스템**
 
@@ -52,7 +52,7 @@ Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**
 
 | 레이어 | 역할 | 독립 실행? |
 |--------|------|:---------:|
-| **PKM Briefing Bot** (이 레포) | 자동 브리핑, 트렌드 큐레이션, 복리 학습 루프, 메타 리뷰 | Yes |
+| **Compound Brain** (이 레포) | 자동 브리핑, 트렌드 큐레이션, 복리 학습 루프, 메타 리뷰 | Yes |
 | **Claude Code + OMC** | `/save` 콘텐츠 캡처, `/wiki` 지식 베이스, `/skill-eval` 자기개선, `/learn` 교훈 추적 | [Claude Code](https://claude.ai/claude-code) 필요 |
 | **마크다운 Vault** | 지식 저장소 (Obsidian, Logseq, VS Code, 아무 폴더) | Yes |
 
@@ -150,8 +150,8 @@ Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**
 ollama pull llama3.1:8b
 
 # 2. 클론 + 설정
-git clone https://github.com/challengekim/pkm-briefing-bot
-cd pkm-briefing-bot
+git clone https://github.com/challengekim/compound-brain
+cd compound-brain
 pip install -r requirements.txt
 python3 setup_wizard.py        # "Ollama" 선택 → API key 입력 없음
 
@@ -163,8 +163,8 @@ python3 main.py                # 스케줄러 실행 (터미널에서 계속 돌
 ### Gemini로 시작 (무료 API key, 더 좋은 품질)
 
 ```bash
-git clone https://github.com/challengekim/pkm-briefing-bot
-cd pkm-briefing-bot
+git clone https://github.com/challengekim/compound-brain
+cd compound-brain
 pip install -r requirements.txt
 python3 setup_wizard.py        # "Gemini" 선택 → aistudio.google.com 무료 키 입력
 python3 main.py --test trend
