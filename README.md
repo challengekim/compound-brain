@@ -20,7 +20,10 @@ Even the ones you read — you forget them within days. The insights never conne
 
 ## What This Does
 
-1. **Save articles** -- `python3 main.py --save <URL>` extracts content, auto-categorizes, and saves to your vault. No AI needed.
+1. **Save articles (3 ways)**:
+   - **Telegram** — send a URL to your bot from your phone. Done. (mobile-friendly)
+   - **CLI** — `python3 main.py --save <URL>`
+   - **Auto** — top 3 trend articles saved daily without you doing anything
 2. **Trend Digest** -- Curated top stories from Hacker News, Reddit AI, and GeekNews. **Top 3 are auto-saved to your vault** — your knowledge base grows even when you're not actively saving.
 3. **LinkedIn Draft** -- AI-generated post from your recent notes and trends, ready to edit and publish.
 4. **Weekly Knowledge Compounding** -- Cross-references everything you saved, discovers patterns using tag analysis, and feeds the last 4 weeks of reports into each new analysis. Your insights actually accumulate.
@@ -30,12 +33,13 @@ Even the ones you read — you forget them within days. The insights never conne
 
 ## What You Actually Do — and What You Get Back
 
-### Your daily routine (1 minute)
+### Your daily routine (30 seconds)
 
-1. **Save articles** — `python3 main.py --save <URL>` (or just let the bot auto-save top trends for you)
-2. **Check Telegram** — briefings arrive automatically
+1. **See an interesting article on your phone?** Send the URL to your Telegram bot. That's it.
+2. **Don't feel like saving anything?** The bot auto-saves top 3 trend articles daily.
+3. **Check Telegram** — briefings arrive automatically.
 
-That's it. Even if you save nothing manually, the bot auto-saves top 3 trend articles daily. Your vault grows on autopilot.
+Your vault grows whether you actively save or not.
 
 ### What the bot does for you (example from a real 10-week run)
 
@@ -361,6 +365,18 @@ bash install.sh
 ```
 
 See [`skills/README.md`](skills/README.md) for details.
+
+---
+
+## Updating
+
+```bash
+cd compound-brain
+git pull
+pip install -r requirements.txt    # only if dependencies changed
+```
+
+Your `config.yaml`, `.env`, and vault are untouched — only code updates.
 
 ---
 

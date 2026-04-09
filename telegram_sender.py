@@ -1,10 +1,12 @@
 import logging
+import re
 
 import requests
 
 logger = logging.getLogger(__name__)
 
 MAX_MESSAGE_LENGTH = 4096
+URL_RE = re.compile(r'https?://[^\s<>"{}|\\^`\[\]]+')
 
 
 class TelegramSender:
@@ -12,6 +14,19 @@ class TelegramSender:
         self.bot_token = bot_token
         self.chat_id = chat_id
         self.base_url = f"https://api.telegram.org/bot{bot_token}"
+
+    def get_updates(self, offset=None):
+        """Poll for new messages from Telegram."""
+        params = {"timeout": 1, "allowed_updates": ["message"]}
+        if offset:
+            params["offset"] = offset
+        try:
+            resp = requests.get(f"{self.base_url}/getUpdates", params=params, timeout=5)
+            if resp.ok:
+                return resp.json().get("result", [])
+        except Exception as e:
+            logger.debug(f"Telegram poll error: {e}")
+        return []
 
     def send_message(self, text, parse_mode="HTML"):
         chunks = self._split_message(text)

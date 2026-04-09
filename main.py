@@ -14,6 +14,7 @@ from config import Config
 from gmail_client import GmailClient
 from email_sender import EmailSender
 from knowledge_scanner import analyze_tag_connections, load_previous_weekly_reports, save_project_ideas, save_url_to_vault, save_weekly_report, scan_all_notes, scan_recent_notes
+from telegram_sender import URL_RE
 from meta_reviewer import collect_monthly_stats
 from summarizer import Summarizer
 from telegram_sender import TelegramSender
@@ -620,6 +621,48 @@ def process_weekly():
     logger.info("Weekly digest sent")
 
 
+_last_update_id = 0
+
+
+def process_telegram_saves():
+    """Check Telegram for incoming URLs and save them to vault."""
+    global _last_update_id
+    config = Config()
+    if not config.telegram_bot_token or not config.vault_path:
+        return
+
+    telegram = TelegramSender(config.telegram_bot_token, config.telegram_chat_id)
+    updates = telegram.get_updates(offset=_last_update_id + 1 if _last_update_id else None)
+
+    for update in updates:
+        _last_update_id = update["update_id"]
+        message = update.get("message", {})
+        text = message.get("text", "")
+        chat_id = str(message.get("chat", {}).get("id", ""))
+
+        # Only process messages from the configured chat
+        if chat_id != config.telegram_chat_id:
+            continue
+
+        # Extract URLs from message
+        urls = URL_RE.findall(text)
+        if not urls:
+            continue
+
+        for url in urls[:3]:  # max 3 per message
+            try:
+                result = save_url_to_vault(url, config.vault_path, config.knowledge_scan_paths)
+                telegram.send_message(
+                    f"✓ <b>{result['title'][:60]}</b>\n"
+                    f"→ {result['category']}\n"
+                    f"<code>{os.path.basename(result['path'])}</code>",
+                )
+                logger.info(f"Telegram save: {result['title'][:40]}")
+            except Exception as e:
+                telegram.send_message(f"✗ Save failed: {str(e)[:100]}")
+                logger.error(f"Telegram save failed for {url}: {e}")
+
+
 _BRIEFING_TYPES = {
     "morning": process_morning,
     "evening": process_evening,
@@ -686,6 +729,10 @@ def main():
             scheduler.add_job(func, "cron", **cron_kwargs)
             scheduled_names.append(name)
     logger.info(f"Scheduled jobs: {', '.join(scheduled_names)} (tz={config.schedule_timezone})")
+
+    # Check for incoming Telegram URLs every 30 seconds
+    scheduler.add_job(process_telegram_saves, "interval", seconds=30, id="telegram_save")
+    logger.info("Telegram save listener active (polling every 30s)")
 
     try:
         scheduler.start()
