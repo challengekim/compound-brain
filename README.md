@@ -1,28 +1,41 @@
 # Compound Brain
 
-**A self-improving personal knowledge management system that reads, collects, summarizes, connects, suggests, and evolves -- automatically.**
+**For everyone who saves articles to "Read Later" and never reads them again.**
 
-> Combines the best ideas from Building a Second Brain (Tiago Forte), Zettelkasten (Luhmann), Compound Learning, and AI-native workflows into a single automated pipeline.
+Compound Brain is a bot that reads your saved articles for you, finds patterns across them, and tells you what actually matters — every week, automatically.
+
+> Built on Building a Second Brain, Zettelkasten, Compound Learning, GTD, and AI-native workflows.
+
+---
+
+## The Problem
+
+You bookmark 10 articles a week. You read maybe 2. The rest sit in your "Read Later" folder forever. Sound familiar?
+
+Even the ones you read — you forget them within days. The insights never connect. The patterns never emerge. You keep saving the same types of articles without realizing it.
+
+**Compound Brain fixes this.** It reads everything you save, finds the patterns you missed, and builds on its own analysis week after week — so your knowledge actually compounds instead of collecting dust.
 
 ---
 
 ## What This Does
 
-1. **Trend Digest** -- Curated top stories from Hacker News, Reddit AI, and GeekNews, filtered by relevance to your projects.
-2. **LinkedIn Draft** -- AI-generated post from your recent notes and trends, ready to edit and publish.
-3. **Weekly Knowledge Compounding** -- Cross-references everything you saved this week, discovers patterns, and generates project ideas.
-4. **Monthly Meta-Review** -- The system diagnoses itself: collection blind spots, idea-to-code conversion rates (estimated by AI), and improvement suggestions.
+1. **Save articles** -- `python3 main.py --save <URL>` extracts content, auto-categorizes, and saves to your vault. No AI needed.
+2. **Trend Digest** -- Curated top stories from Hacker News, Reddit AI, and GeekNews. **Top 3 are auto-saved to your vault** — your knowledge base grows even when you're not actively saving.
+3. **LinkedIn Draft** -- AI-generated post from your recent notes and trends, ready to edit and publish.
+4. **Weekly Knowledge Compounding** -- Cross-references everything you saved, discovers patterns using tag analysis, and feeds the last 4 weeks of reports into each new analysis. Your insights actually accumulate.
+5. **Monthly Meta-Review** -- The system diagnoses itself: collection blind spots, idea-to-code conversion rates (AI-estimated), and improvement suggestions.
 
 ---
 
 ## What You Actually Do — and What You Get Back
 
-### Your daily routine (2 minutes)
+### Your daily routine (1 minute)
 
-1. **Save articles you find interesting** — drop markdown files into your vault folder (or use `/save` with Claude Code)
-2. **Check Telegram** — briefings arrive automatically at scheduled times
+1. **Save articles** — `python3 main.py --save <URL>` (or just let the bot auto-save top trends for you)
+2. **Check Telegram** — briefings arrive automatically
 
-That's it. The bot does the rest.
+That's it. Even if you save nothing manually, the bot auto-saves top 3 trend articles daily. Your vault grows on autopilot.
 
 ### What the bot does for you (example from a real 10-week run)
 
@@ -204,8 +217,9 @@ pip install -r requirements.txt
 python3 setup_wizard.py        # Select "Ollama" → no API key needed
 
 # 3. Run
-python3 main.py --test trend   # Test it
-python3 main.py                # Run scheduler (keeps running in terminal)
+python3 main.py --save https://example.com/article  # Save an article
+python3 main.py --test trend   # Test trend digest (auto-saves top 3)
+python3 main.py                # Run scheduler (keeps running)
 ```
 
 ### With Gemini (free API key, better quality)

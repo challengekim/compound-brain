@@ -13,7 +13,7 @@ from calendar_client import CalendarClient
 from config import Config
 from gmail_client import GmailClient
 from email_sender import EmailSender
-from knowledge_scanner import analyze_tag_connections, load_previous_weekly_reports, save_project_ideas, save_weekly_report, scan_all_notes, scan_recent_notes
+from knowledge_scanner import analyze_tag_connections, load_previous_weekly_reports, save_project_ideas, save_url_to_vault, save_weekly_report, scan_all_notes, scan_recent_notes
 from meta_reviewer import collect_monthly_stats
 from summarizer import Summarizer
 from telegram_sender import TelegramSender
@@ -394,6 +394,21 @@ def process_trend_digest():
     telegram.send_message(message)
     logger.info(f"Trend digest sent ({len(items)} items)")
 
+    # Auto-save top trend items to vault for compound learning
+    if config.vault_path and items:
+        items_sorted = sorted(items, key=lambda x: x.get("score", 0), reverse=True)
+        saved_count = 0
+        for item in items_sorted[:3]:
+            try:
+                save_url_to_vault(
+                    item["url"], config.vault_path, config.knowledge_scan_paths,
+                )
+                saved_count += 1
+            except Exception as e:
+                logger.warning(f"Auto-save failed for {item['url']}: {e}")
+        if saved_count:
+            logger.info(f"Auto-saved {saved_count} trend items to vault")
+
 
 def process_weekly_knowledge():
     config = Config()
@@ -619,6 +634,10 @@ _BRIEFING_TYPES = {
 def main():
     parser = argparse.ArgumentParser(description="PKM Briefing Bot")
     parser.add_argument(
+        "--save", metavar="URL",
+        help="Save a URL to your vault as a markdown note",
+    )
+    parser.add_argument(
         "--test",
         choices=list(_BRIEFING_TYPES.keys()),
         help="Run a single briefing type immediately for testing",
@@ -626,6 +645,21 @@ def main():
     args = parser.parse_args()
 
     logger.info("Productivity Briefing Bot starting...")
+
+    # --save: save a URL to the vault and exit
+    if args.save:
+        config = Config()
+        summarizer_instance = None
+        if config.llm_api_key or config.llm_provider == "ollama":
+            summarizer_instance = Summarizer(config=config, lang=config.language)
+        result = save_url_to_vault(
+            args.save, config.vault_path, config.knowledge_scan_paths,
+            summarizer_instance,
+        )
+        print(f"Saved: {result['title']}")
+        print(f"  Path: {result['path']}")
+        print(f"  Category: {result['category']}")
+        return
 
     # --test flag takes priority, then RUN_NOW env var
     if args.test:

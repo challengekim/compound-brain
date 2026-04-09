@@ -2,7 +2,11 @@ import logging
 import os
 import re
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
+
+import requests
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -247,3 +251,121 @@ def scan_all_notes(config):
     notes.sort(key=lambda n: n.get("saved", ""), reverse=True)
     logger.info(f"Full vault scan: {len(notes)} total notes")
     return notes
+
+
+def save_url_to_vault(url, vault_path, scan_paths, summarizer=None):
+    """Save a URL to the vault as a markdown file with frontmatter.
+
+    Uses requests + beautifulsoup4 to extract content.
+    Optionally uses summarizer for AI-generated description.
+    """
+    # Fetch the page
+    headers = {"User-Agent": "Mozilla/5.0 (compound-brain bot)"}
+    resp = requests.get(url, headers=headers, timeout=15)
+    resp.raise_for_status()
+
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    # Extract title
+    title = ""
+    if soup.title:
+        title = soup.title.string.strip()
+    if not title:
+        title = urlparse(url).netloc
+
+    # Extract main text content — remove non-content tags
+    for tag in soup.find_all(["script", "style", "nav", "footer", "header"]):
+        tag.decompose()
+
+    body_text = soup.get_text(separator="\n", strip=True)
+    body_text = re.sub(r"\n{3,}", "\n\n", body_text)
+    body_text = body_text[:10000]
+
+    # Auto-detect category from URL domain and content
+    domain = urlparse(url).netloc.lower()
+    category = _detect_category(domain, title, body_text)
+
+    # Generate description
+    description = title
+    if summarizer:
+        try:
+            desc_prompt = (
+                f"Summarize this article in one sentence (under 100 chars):\n\n"
+                f"Title: {title}\n\nContent: {body_text[:2000]}"
+            )
+            description = summarizer._generate(desc_prompt).strip()[:150]
+        except Exception:
+            pass
+
+    # Generate tags
+    tags = _detect_tags(domain, title, category)
+
+    # Build filename
+    safe_title = re.sub(r'[<>:"/\\|?*]', '', title)[:60].strip()
+    filename = f"{safe_title}.md"
+
+    # Determine save path
+    category_paths = {
+        "ai-eng": "10_Knowledge/References/AI Engineering",
+        "ai-tool": "10_Knowledge/References/AI Tools",
+        "business": "10_Knowledge/References/Business",
+        "engineering": "10_Knowledge/References/Engineering",
+        "marketing": "10_Knowledge/References/Marketing",
+    }
+    rel_path = category_paths.get(category, "00_Inbox/Read Later")
+
+    save_dir = os.path.join(vault_path, rel_path)
+    os.makedirs(save_dir, exist_ok=True)
+    filepath = os.path.join(save_dir, filename)
+
+    # Write file
+    now = datetime.now(KST)
+    tags_str = ", ".join(tags)
+    content = (
+        f"---\n"
+        f"source: {url}\n"
+        f"title: \"{title}\"\n"
+        f"description: \"{description}\"\n"
+        f"saved: {now.strftime('%Y-%m-%d')}\n"
+        f"type: article\n"
+        f"tags: [{tags_str}]\n"
+        f"status: pending\n"
+        f"---\n\n"
+        f"# {title}\n\n"
+        f"> Source: {url}\n\n"
+        f"{body_text}\n"
+    )
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    logger.info(f"Saved: {filepath}")
+    return {"title": title, "path": filepath, "category": category}
+
+
+def _detect_category(domain, title, body):
+    """Simple keyword-based category detection."""
+    text = f"{domain} {title} {body[:500]}".lower()
+    if any(k in text for k in ["llm", "ai agent", "machine learning", "gpt", "claude", "gemini", "neural", "transformer"]):
+        return "ai-eng"
+    if any(k in text for k in ["ai tool", "saas", "app", "product", "tool"]):
+        return "ai-tool"
+    if any(k in text for k in ["marketing", "seo", "ads", "growth", "conversion"]):
+        return "marketing"
+    if any(k in text for k in ["startup", "business", "funding", "revenue", "company"]):
+        return "business"
+    if any(k in text for k in ["engineering", "devops", "infrastructure", "deploy", "ci/cd"]):
+        return "engineering"
+    return "ai-eng"  # default for tech content
+
+
+def _detect_tags(domain, title, category):
+    """Generate basic tags."""
+    tags = [category.replace("-", "_") if category != "ai-eng" else "ai"]
+    if "github.com" in domain:
+        tags.append("open-source")
+    if any(k in title.lower() for k in ["agent", "에이전트"]):
+        tags.append("ai-agents")
+    if any(k in title.lower() for k in ["claude", "anthropic"]):
+        tags.append("claude-code")
+    return tags
