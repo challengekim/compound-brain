@@ -19,7 +19,8 @@ if [ ! -f "main.py" ]; then
     cd compound-brain
 fi
 
-# Install dependencies
+# Create virtual environment and install
+python3 -m venv .venv 2>/dev/null && source .venv/bin/activate 2>/dev/null
 pip install -r requirements.txt
 
 # Run setup wizard

@@ -41,7 +41,7 @@ Even the ones you read — you forget them within days. The insights never conne
 
 Your vault grows whether you actively save or not.
 
-### What the bot does for you (example from a real 10-week run)
+### What the bot does for you (from a 10-week simulation with real vault data)
 
 **Week 1** — You save 7 articles about AI agents and startup strategy.
 ```
