@@ -15,6 +15,54 @@
 
 ---
 
+## What You Actually Do — and What You Get Back
+
+### Your daily routine (2 minutes)
+
+1. **Save articles you find interesting** — drop markdown files into your vault folder (or use `/save` with Claude Code)
+2. **Check Telegram** — briefings arrive automatically at scheduled times
+
+That's it. The bot does the rest.
+
+### What the bot does for you (example from a real 10-week run)
+
+**Week 1** — You save 7 articles about AI agents and startup strategy.
+```
+→ Bot finds 3 themes: "agent architecture", "AI-native orgs", "token optimization"
+→ Suggests: "Apply token optimization to your SaaS project's API costs"
+```
+
+**Week 3** — You save articles about marketing automation and knowledge management.
+```
+→ Bot receives Week 1-2 reports as input
+→ Discovers: "Your interest in 'AI agents' has evolved from architecture → practical workflows"
+→ Connects notes: "Marketing automation article" ↔ "Agent orchestration article" (shared tags: automation, ai-agents)
+→ Suggests: "Combine agent orchestration with your marketing workflow for automated competitor analysis"
+```
+
+**Week 8** — You've accumulated 50+ notes across categories.
+```
+→ Bot traces 8-week evolution: "AI agents → practical workflows → business automation → 1-person company"
+→ Cross-project insight: "The agent framework from Week 2 can power the recommendation engine in your side project"
+→ Suggests specific actions for each of your registered projects
+```
+
+**Month-end** — Meta-review arrives.
+```
+→ "You saved 78 notes. 40% AI Engineering, 25% Business, 20% Marketing, 15% other"
+→ "Top sources: Karpathy (5), GeekNews (8), Lenny Newsletter (4)"
+→ "3 of 12 suggested ideas appeared in your git commits — 25% conversion rate"
+→ "Blind spot: No Engineering/DevOps articles saved. Consider diversifying."
+```
+
+### The key difference from just reading articles
+
+Without this system: You read → you forget → you read the same patterns again.
+
+With this system: You save → AI analyzes → patterns emerge across weeks → ideas compound → you act on the best ones → the system tracks what worked.
+
+---
+
 ## The Methodology: Why This Works
 
 ### Standing on the Shoulders of Giants
