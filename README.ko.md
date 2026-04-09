@@ -11,7 +11,7 @@
 1. **트렌드 다이제스트** -- Hacker News, Reddit AI, GeekNews에서 수집한 기사를 AI가 5~7개로 큐레이션.
 2. **LinkedIn 초안** -- vault 노트 + 트렌드를 조합해 AI가 포스트 초안 작성. 수정 후 바로 게시.
 3. **주간 지식 컴파운딩** -- 이번 주 저장한 노트의 패턴을 발견하고, 프로젝트별 아이디어를 생성.
-4. **월간 메타 리뷰** -- 시스템이 스스로를 진단: 수집 편향, 아이디어→코드 전환율, 개선 제안.
+4. **월간 메타 리뷰** -- 시스템이 스스로를 진단: 수집 편향, 아이디어→코드 전환율 (AI 추정), 개선 제안.
 
 ---
 
@@ -75,7 +75,7 @@ Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**
 | **autoimprove-cc** | [VoidLight00/autoimprove-cc](https://github.com/VoidLight00/autoimprove-cc) — Claude Code SKILL.md용 autoresearch | Binary assertion 평가 + 개선 시 git commit. `/skill-eval`에 적용 |
 | **autoresearch-skill** | [olelehmann100kMRR/autoresearch-skill](https://github.com/olelehmann100kMRR/autoresearch-skill) — 857 stars | 3-6개 binary eval, 한번에 하나만 변이, 95%+ 목표. 평가 설계에 참고 |
 | **Last30Days** | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) — 9개 플랫폼 트렌드 리서치 | 30일간 크로스 플랫폼 수렴 감지. 트렌드 다이제스트 파이프라인에 영감 |
-| **oh-my-claudecode** | [nicobailarew/oh-my-claudecode](https://github.com/nicobailarew/oh-my-claudecode) — 멀티 에이전트 오케스트레이션 | `/wiki`, `/skill-eval`, `/save`, `/learn` 스킬 제공 |
+| **oh-my-claudecode** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — 멀티 에이전트 오케스트레이션 | `/wiki`, `/skill-eval`, `/save`, `/learn` 스킬 제공 |
 | **gstack** | [garrytan/gstack](https://github.com/garrytan/gstack) — Garry Tan의 AI 개발 툴킷 | QA 테스트, 배포, 코드 리뷰 워크플로우 |
 
 **아티클:**
@@ -86,7 +86,7 @@ Andrej Karpathy의 비전: LLM을 챗봇이 아니라 **운영체제 레이어**
 | [LLM Wiki 구축 가이드](https://gist.github.com/unclejobs-ai/7af4a9e3446751b8e2c3bc66d23fa0ac) | unclejobs-ai | Karpathy LLM 위키 패턴의 실전 구현 가이드 |
 | [복리 지식 시스템](https://retn.kr/blog/compound-learning-ai-system/) | Simpson Gyusup Sim | 에피소딕 메모리 + 4단계 루프 (수집→구조화→맥락부여→자동적용) |
 
-> **참고**: 봇 자체(1-4)는 독립 실행됩니다. Claude Code 동반 레이어(LLM Wiki, Autoresearch, Learning System)는 [Claude Code](https://claude.ai/claude-code) + [oh-my-claudecode](https://github.com/nicobailarew/oh-my-claudecode)가 필요합니다.
+> **참고**: 봇 자체(1-4)는 독립 실행됩니다. Claude Code 동반 레이어(LLM Wiki, Autoresearch, Learning System)는 [Claude Code](https://claude.ai/claude-code) + [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)가 필요합니다.
 
 ### 각 도구에서 뭘 가져왔고, 뭘 바꿨나
 
@@ -202,7 +202,7 @@ docker-compose up -d
 | 트렌드 | 매일 10:00 | HN, Reddit AI, GeekNews 큐레이션 |
 | LinkedIn | 매일 11:30 | vault 노트 + 트렌드로 AI 포스트 초안 |
 | 지식 | 토 10:00 | 복리 학습: 이번 주 노트 패턴 + 프로젝트 아이디어 |
-| 메타 리뷰 | 매월 1일 | 시스템 자기진단: 수집 패턴, 아이디어→코드 추적 |
+| 메타 리뷰 | 매월 1일 | 시스템 자기진단: 수집 패턴, 아이디어→코드 추적 (AI 추정) |
 
 모든 스케줄은 `config.yaml`에서 변경 가능합니다.
 

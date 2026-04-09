@@ -11,7 +11,7 @@
 1. **Trend Digest** -- Curated top stories from Hacker News, Reddit AI, and GeekNews, filtered by relevance to your projects.
 2. **LinkedIn Draft** -- AI-generated post from your recent notes and trends, ready to edit and publish.
 3. **Weekly Knowledge Compounding** -- Cross-references everything you saved this week, discovers patterns, and generates project ideas.
-4. **Monthly Meta-Review** -- The system diagnoses itself: collection blind spots, idea-to-code conversion rates, and improvement suggestions.
+4. **Monthly Meta-Review** -- The system diagnoses itself: collection blind spots, idea-to-code conversion rates (estimated by AI), and improvement suggestions.
 
 ---
 
@@ -75,7 +75,7 @@ This system combines ideas from open-source projects, articles, and frameworks w
 | **autoimprove-cc** | [VoidLight00/autoimprove-cc](https://github.com/VoidLight00/autoimprove-cc) — autoresearch for Claude Code SKILL.md | Binary assertion evals + git commit on improvement. Adapted for `/skill-eval` |
 | **autoresearch-skill** | [olelehmann100kMRR/autoresearch-skill](https://github.com/olelehmann100kMRR/autoresearch-skill) — 857 stars | 3-6 binary evals, one mutation at a time, 95%+ target. Informed our eval design |
 | **Last30Days** | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) — 9-platform trend research | 30-day cross-platform convergence detection. Inspired our trend digest pipeline |
-| **oh-my-claudecode** | [nicobailarew/oh-my-claudecode](https://github.com/nicobailarew/oh-my-claudecode) — Multi-agent orchestration | Provides `/wiki`, `/skill-eval`, `/save`, `/learn` skills used in the companion layer |
+| **oh-my-claudecode** | [Yeachan-Heo/oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — Multi-agent orchestration | Provides `/wiki`, `/skill-eval`, `/save`, `/learn` skills used in the companion layer |
 | **gstack** | [garrytan/gstack](https://github.com/garrytan/gstack) — AI development toolkit by Garry Tan | QA testing, deployment, code review workflows |
 
 **Articles:**
@@ -86,7 +86,7 @@ This system combines ideas from open-source projects, articles, and frameworks w
 | [LLM Wiki 구축 가이드](https://gist.github.com/unclejobs-ai/7af4a9e3446751b8e2c3bc66d23fa0ac) | unclejobs-ai | Practical implementation guide for Karpathy's LLM wiki pattern |
 | [복리 지식 시스템](https://retn.kr/blog/compound-learning-ai-system/) | Simpson Gyusup Sim | Episodic memory + 4-stage loop (collect→structure→contextualize→auto-apply) |
 
-> **Note**: The bot itself (features 1-4) works independently. The Claude Code companion layer (LLM Wiki, Autoresearch, Learning System) requires [Claude Code](https://claude.ai/claude-code) with [oh-my-claudecode](https://github.com/nicobailarew/oh-my-claudecode).
+> **Note**: The bot itself (features 1-4) works independently. The Claude Code companion layer (LLM Wiki, Autoresearch, Learning System) requires [Claude Code](https://claude.ai/claude-code) with [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode).
 
 ### What We Took From Each Tool — and What We Changed
 
@@ -203,7 +203,7 @@ See [`config.example.yaml`](config.example.yaml) for all options with comments.
 | Trend | Daily 10:00 | Top stories from HN, Reddit AI, GeekNews -- curated by AI |
 | LinkedIn | Daily 11:30 | AI-drafted post from your vault notes + trends |
 | Knowledge | Sat 10:00 | Compound learning: patterns across saved notes + project ideas |
-| Meta Review | 1st of month | System self-diagnosis: collection patterns, idea-to-code tracking |
+| Meta Review | 1st of month | System self-diagnosis: collection patterns, idea-to-code tracking (AI-estimated) |
 
 All schedules are configurable in `config.yaml`.
 
