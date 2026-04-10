@@ -6,7 +6,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from knowledge_scanner import _parse_frontmatter, _category_from_path
+from core.scanner import _parse_frontmatter, _category_from_path
 
 logger = logging.getLogger(__name__)
 

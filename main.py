@@ -6,13 +6,16 @@ from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from briefing_composer import compose_linkedin_draft, compose_meta_review_telegram, compose_trend_digest, compose_weekly_knowledge
 from config import Config
-from knowledge_scanner import analyze_tag_connections, load_previous_weekly_reports, save_project_ideas, save_url_to_vault, save_weekly_report, scan_all_notes, scan_recent_notes
-from meta_reviewer import collect_monthly_stats
-from summarizer import Summarizer
-from telegram_sender import TelegramSender, URL_RE
-from trend_fetcher import fetch_all_trends
+from core import (
+    Summarizer, TelegramSender, URL_RE,
+    scan_recent_notes, scan_all_notes, save_project_ideas,
+    save_weekly_report, load_previous_weekly_reports,
+    analyze_tag_connections, save_url_to_vault,
+    compose_trend_digest, compose_weekly_knowledge,
+    compose_linkedin_draft, compose_meta_review_telegram, escape_html,
+    collect_monthly_stats, fetch_all_trends,
+)
 
 logging.basicConfig(
     level=logging.INFO,
