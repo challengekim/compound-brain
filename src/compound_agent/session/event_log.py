@@ -53,20 +53,22 @@ class EventLog:
         """Read all events from disk."""
         if not self._path.exists():
             return []
-        events = []
+        # Read only the path under lock, then read file contents outside lock
         with self._lock:
-            try:
-                with open(self._path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        try:
-                            events.append(json.loads(line))
-                        except json.JSONDecodeError:
-                            logger.warning("Skipping malformed event line")
-            except OSError:
-                return []
+            path = self._path
+        events = []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        events.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        logger.warning("Skipping malformed event line")
+        except OSError:
+            return []
         return events
 
     def get_last_cycle(self) -> list[dict]:
@@ -78,7 +80,7 @@ class EventLog:
             if ev.get("event_type") == "cycle_start":
                 last_start = i
         if last_start == -1:
-            return events  # No cycle_start found — return everything
+            return []  # No cycle_start found — return empty
         return events[last_start:]
 
     def get_events(

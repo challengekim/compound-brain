@@ -3,6 +3,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 
+def _sanitize(text: str, max_len: int = 100) -> str:
+    """Strip newlines and cap length to prevent prompt injection."""
+    sanitized = text.replace("\n", " ").replace("\r", " ")
+    if len(sanitized) > max_len:
+        sanitized = sanitized[:max_len]
+    return sanitized
+
+
 @dataclass
 class AgentResult:
     success: bool
@@ -35,7 +43,7 @@ class BaseAgent(ABC):
         task_type = task.get("type")
         if task_type not in self.get_capabilities():
             return False
-        schema = self.TASK_TYPES.get(task_type, {})
+        schema = getattr(self, "TASK_TYPES", {}).get(task_type, {})
         return all(k in task for k in schema.get("required", []))
 
     def _generate(self, prompt: str) -> str:

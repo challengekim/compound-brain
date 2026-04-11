@@ -50,11 +50,11 @@ class TestEventLogGetLastCycle:
     def test_returns_empty_for_empty_log(self, log):
         assert log.get_last_cycle() == []
 
-    def test_returns_all_events_when_no_cycle_start(self, log):
+    def test_returns_empty_when_no_cycle_start(self, log):
         log.append("ev1")
         log.append("ev2")
         cycle = log.get_last_cycle()
-        assert len(cycle) == 2
+        assert cycle == []
 
     def test_returns_events_from_last_cycle_start(self, log):
         log.append("ev_before")

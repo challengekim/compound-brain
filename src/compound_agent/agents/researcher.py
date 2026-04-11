@@ -2,7 +2,7 @@
 import logging
 import time
 
-from .base import BaseAgent, AgentResult
+from .base import BaseAgent, AgentResult, _sanitize
 from ..trend_fetcher import fetch_all_trends
 
 logger = logging.getLogger(__name__)
@@ -52,11 +52,12 @@ class ResearcherAgent(BaseAgent):
         if not articles:
             return {"articles": [], "category": category}, 0
 
+        safe_category = _sanitize(category)
         titles = "\n".join(f"- {a['title']}" for a in articles[:30])
         prompt = (
-            f"Category: {category}\n\n"
+            f"Category: {safe_category}\n\n"
             f"Articles:\n{titles}\n\n"
-            f"Return a comma-separated list of article titles most relevant to the category '{category}'. "
+            f"Return a comma-separated list of article titles most relevant to the category '{safe_category}'. "
             f"Return only titles, no explanation."
         )
         response = self._generate(prompt)
@@ -85,11 +86,12 @@ class ResearcherAgent(BaseAgent):
         if not relevant:
             relevant = articles[:10]
 
+        safe_topic = _sanitize(topic)
         titles = "\n".join(f"- {a['title']}" for a in relevant)
         prompt = (
-            f"Topic: {topic}\n\n"
+            f"Topic: {safe_topic}\n\n"
             f"Recent articles:\n{titles}\n\n"
-            f"Write a concise research brief (3-5 bullet points) summarising the current state of '{topic}' "
+            f"Write a concise research brief (3-5 bullet points) summarising the current state of '{safe_topic}' "
             f"based on these articles. Focus on key developments and implications."
         )
         brief = self._generate(prompt)
@@ -117,7 +119,7 @@ class ResearcherAgent(BaseAgent):
         if not preferred or not articles:
             return {"articles": articles[:10], "interests": preferred}, 0
 
-        prefs_str = ", ".join(preferred)
+        prefs_str = ", ".join(_sanitize(p) for p in preferred)
         titles = "\n".join(f"- {a['title']}" for a in articles[:30])
         prompt = (
             f"User interests: {prefs_str}\n\n"

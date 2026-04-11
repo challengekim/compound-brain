@@ -116,7 +116,7 @@ class TestPlanParsing:
             {"agent": "researcher", "task": {"type": "trending_relevant"}}
         ])
         orch.summarizer._generate.return_value = plan_json
-        plan = orch._plan(orch._build_context())
+        plan, _ = orch._plan(orch._build_context())
         assert len(plan) == 1
         assert plan[0]["agent"] == "researcher"
 
@@ -126,13 +126,13 @@ class TestPlanParsing:
             {"agent": "analyst", "task": {"type": "compound_analysis"}}
         ])
         orch.summarizer._generate.return_value = f"Here is the plan:\n```json\n{plan_json}\n```"
-        plan = orch._plan(orch._build_context())
+        plan, _ = orch._plan(orch._build_context())
         assert plan[0]["agent"] == "analyst"
 
     def test_fallback_on_invalid_json(self):
         orch = _make_orchestrator()
         orch.summarizer._generate.return_value = "not json at all"
-        plan = orch._plan(orch._build_context("trend"))
+        plan, _ = orch._plan(orch._build_context("trend"))
         # Should fall back to rule-based
         assert isinstance(plan, list)
         assert len(plan) >= 1
@@ -141,14 +141,42 @@ class TestPlanParsing:
         orch = _make_orchestrator()
         bad_plan = json.dumps([{"agent": "nonexistent", "task": {"type": "task_x"}}])
         orch.summarizer._generate.return_value = bad_plan
-        plan = orch._plan(orch._build_context())
+        plan, _ = orch._plan(orch._build_context())
         # Falls back to rule-based, which uses known agents
         assert all(orch.registry.get(s["agent"]) is not None for s in plan)
 
     def test_fallback_on_llm_exception(self):
         orch = _make_orchestrator()
         orch.summarizer._generate.side_effect = Exception("API error")
-        plan = orch._plan(orch._build_context())
+        plan, _ = orch._plan(orch._build_context())
+        assert isinstance(plan, list)
+        assert len(plan) >= 1
+
+    def test_forward_reference_in_depends_on_raises(self):
+        orch = _make_orchestrator()
+        # Step 0 references step 1 (forward reference) — must raise ValueError
+        bad_plan = json.dumps([
+            {"agent": "researcher", "task": {"type": "trending_relevant"}, "depends_on": 1},
+            {"agent": "analyst", "task": {"type": "compound_analysis"}},
+        ])
+        orch.summarizer._generate.return_value = bad_plan
+        with pytest.raises(ValueError, match="forward or self reference"):
+            orch._parse_and_validate_plan(bad_plan)
+
+    def test_self_reference_in_depends_on_raises(self):
+        orch = _make_orchestrator()
+        # Step 0 references itself — must raise ValueError
+        bad_plan = json.dumps([
+            {"agent": "researcher", "task": {"type": "trending_relevant"}, "depends_on": 0},
+        ])
+        with pytest.raises(ValueError, match="forward or self reference"):
+            orch._parse_and_validate_plan(bad_plan)
+
+    def test_planning_mode_rules_skips_llm(self):
+        orch = _make_orchestrator()
+        orch.config.orchestrator_planning_mode = "rules"
+        plan, _ = orch._plan(orch._build_context("trend"))
+        orch.summarizer._generate.assert_not_called()
         assert isinstance(plan, list)
         assert len(plan) >= 1
 
@@ -199,7 +227,7 @@ class TestExecutePlan:
             {"agent": "researcher", "task": {"type": "trending_relevant"}},
             {"agent": "analyst", "task": {"type": "compound_analysis"}},
         ]
-        results = orch._execute_plan(plan)
+        results, _ = orch._execute_plan(plan)
         assert len(results) == 2
 
     def test_chains_depends_on_result(self):
@@ -229,14 +257,14 @@ class TestExecutePlan:
             {"agent": "researcher", "task": {"type": "trending_relevant"}},
             {"agent": "analyst", "task": {"type": "compound_analysis"}},
         ]
-        results = orch._execute_plan(plan)
+        results, _ = orch._execute_plan(plan)
         assert results[0].success is False
         assert results[1].success is True  # analyst still ran
 
     def test_missing_agent_returns_error_result(self):
         orch = _make_orchestrator()
         plan = [{"agent": "ghost_agent", "task": {"type": "task_x"}}]
-        results = orch._execute_plan(plan)
+        results, _ = orch._execute_plan(plan)
         assert results[0].success is False
         assert "ghost_agent" in results[0].error
 
@@ -258,14 +286,14 @@ class TestCostGuard:
             {"agent": "researcher", "task": {"type": "trending_relevant"}},
             {"agent": "analyst", "task": {"type": "compound_analysis"}},
         ]
-        results = orch._execute_plan(plan)
+        results, _ = orch._execute_plan(plan)
         # Only first step should execute (llm_calls=2 > limit=1 after step 0)
         assert len(results) == 1
 
     def test_cost_guard_prevents_planning_llm_call(self):
         orch = _make_orchestrator(max_llm_calls=0)
         context = orch._build_context("trend")
-        plan = orch._plan(context)
+        plan, _ = orch._plan(context)
         # LLM should not be called; falls back to rule-based
         orch.summarizer._generate.assert_not_called()
         assert isinstance(plan, list)

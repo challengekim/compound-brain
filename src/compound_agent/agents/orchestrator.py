@@ -2,10 +2,11 @@
 import json
 import logging
 import re
+import threading
 
 import jsonschema
 
-from .base import AgentResult
+from .base import AgentResult, _sanitize
 from . import AgentRegistry
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,6 @@ class Orchestrator:
         self.registry = registry
         self.hands = hands
         self.summarizer = summarizer
-        self._cycle_llm_calls = 0
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -46,7 +46,7 @@ class Orchestrator:
 
     def run_cycle(self, scheduled_action: str = None) -> list[AgentResult]:
         """Main entry. Log cycle, handle pipeline tasks, or plan+execute."""
-        self._cycle_llm_calls = 0
+        cycle_llm_calls = 0
         self.event_log.append("cycle_start", agent="orchestrator", task={"scheduled_action": scheduled_action})
 
         # Pipeline actions delegate directly to Hands
@@ -57,18 +57,20 @@ class Orchestrator:
                 agent="orchestrator",
                 result={"pipeline": scheduled_action, "count": len(results)},
             )
+            self.event_log.rotate()
             return results
 
         # LLM-planned execution
         context = self._build_context(scheduled_action)
-        plan = self._plan(context)
-        results = self._execute_plan(plan)
+        plan, cycle_llm_calls = self._plan(context, cycle_llm_calls)
+        results, cycle_llm_calls = self._execute_plan(plan, cycle_llm_calls)
 
         self.event_log.append(
             "cycle_end",
             agent="orchestrator",
             result={"plan_steps": len(plan), "executed": len(results)},
         )
+        self.event_log.rotate()
         return results
 
     # ------------------------------------------------------------------
@@ -110,26 +112,32 @@ class Orchestrator:
     # Planning
     # ------------------------------------------------------------------
 
-    def _plan(self, context: dict) -> list[dict]:
+    def _plan(self, context: dict, cycle_llm_calls: int = 0) -> tuple[list[dict], int]:
         """LLM planning with 3-stage fallback: JSON parse -> regex extract -> rule-based."""
         max_calls = getattr(self.config, "orchestrator_max_llm_calls", _DEFAULT_MAX_LLM_CALLS)
-        if self._cycle_llm_calls >= max_calls:
+
+        # Issue #3: respect orchestrator_planning_mode config
+        planning_mode = getattr(self.config, "orchestrator_planning_mode", None)
+        if planning_mode == "rules":
+            return self._rule_based_plan(context), cycle_llm_calls
+
+        if cycle_llm_calls >= max_calls:
             logger.warning("Orchestrator: cost guard hit before planning, using rule-based plan")
-            return self._rule_based_plan(context)
+            return self._rule_based_plan(context), cycle_llm_calls
 
         prompt = self._build_planning_prompt(context)
         try:
             raw = self.summarizer._generate(prompt)
-            self._cycle_llm_calls += 1
+            cycle_llm_calls += 1
         except Exception as e:
             logger.error("Orchestrator: LLM planning failed: %s", e)
-            return self._rule_based_plan(context)
+            return self._rule_based_plan(context), cycle_llm_calls
 
         try:
-            return self._parse_and_validate_plan(raw)
+            return self._parse_and_validate_plan(raw), cycle_llm_calls
         except Exception as e:
             logger.warning("Orchestrator: plan parse/validate failed (%s), using rule-based", e)
-            return self._rule_based_plan(context)
+            return self._rule_based_plan(context), cycle_llm_calls
 
     def _parse_and_validate_plan(self, raw: str) -> list[dict]:
         """Extract JSON, validate schema, validate agent names and capabilities."""
@@ -155,15 +163,20 @@ class Orchestrator:
         # Validate against schema
         jsonschema.validate(plan, PLAN_SCHEMA)
 
-        # Validate agent names and task types
+        # Validate agent names, task types, and depends_on references
         available = self.registry.list_capabilities()
-        for step in plan:
+        for i, step in enumerate(plan):
             agent_name = step["agent"]
             task_type = step["task"].get("type")
             if agent_name not in available:
                 raise ValueError(f"Unknown agent: {agent_name}")
             if task_type not in available.get(agent_name, []):
                 raise ValueError(f"Agent '{agent_name}' cannot handle task type '{task_type}'")
+            dep_idx = step.get("depends_on")
+            if dep_idx is not None and dep_idx >= i:
+                raise ValueError(
+                    f"Step {i}: depends_on={dep_idx} is a forward or self reference (must be < {i})"
+                )
 
         return plan
 
@@ -189,13 +202,13 @@ class Orchestrator:
     # Execution
     # ------------------------------------------------------------------
 
-    def _execute_plan(self, plan: list[dict]) -> list[AgentResult]:
+    def _execute_plan(self, plan: list[dict], cycle_llm_calls: int = 0) -> tuple[list[AgentResult], int]:
         """Execute sequentially with depends_on chaining and cost guard."""
         max_calls = getattr(self.config, "orchestrator_max_llm_calls", _DEFAULT_MAX_LLM_CALLS)
         results: list[AgentResult] = []
 
         for i, step in enumerate(plan):
-            if self._cycle_llm_calls >= max_calls:
+            if cycle_llm_calls >= max_calls:
                 logger.warning(
                     "Orchestrator: cost guard — stopping after %d steps (limit=%d llm calls)",
                     i, max_calls,
@@ -207,8 +220,14 @@ class Orchestrator:
 
             # Inject upstream result data if depends_on is set
             dep_idx = step.get("depends_on")
-            if dep_idx is not None and 0 <= dep_idx < len(results):
-                task["input"] = results[dep_idx].data
+            if dep_idx is not None:
+                if 0 <= dep_idx < len(results):
+                    task["input"] = results[dep_idx].data
+                else:
+                    logger.warning(
+                        "Orchestrator: step %d depends_on=%d but only %d results available — skipping injection",
+                        i, dep_idx, len(results),
+                    )
 
             agent = self.registry.get(agent_name)
             if agent is None:
@@ -224,7 +243,7 @@ class Orchestrator:
             self.event_log.append("task_start", agent=agent_name, task=task)
             try:
                 result = agent.run(task)
-                self._cycle_llm_calls += result.llm_calls
+                cycle_llm_calls += result.llm_calls
             except Exception as e:
                 logger.error("Orchestrator: agent '%s' raised: %s", agent_name, e)
                 result = AgentResult(
@@ -241,7 +260,7 @@ class Orchestrator:
             )
             results.append(result)
 
-        return results
+        return results, cycle_llm_calls
 
     # ------------------------------------------------------------------
     # Context & prompt building
@@ -281,11 +300,12 @@ class Orchestrator:
         )
         scheduled = context.get("scheduled_action") or "none"
         preferred = context.get("preferred_categories", [])
+        safe_preferred = [_sanitize(p) for p in preferred] if preferred else []
 
         return (
             f"You are planning tasks for a compound learning agent.\n\n"
             f"Scheduled action: {scheduled}\n"
-            f"User preferred categories: {', '.join(preferred) if preferred else 'unknown'}\n\n"
+            f"User preferred categories: {', '.join(safe_preferred) if safe_preferred else 'unknown'}\n\n"
             f"Available agents and their task types:\n{agents_desc}\n\n"
             f"Return a JSON array of task steps to execute. Each step must have:\n"
             f'  - "agent": agent name (must be one of: {list(context.get("available_agents", {}).keys())})\n'
