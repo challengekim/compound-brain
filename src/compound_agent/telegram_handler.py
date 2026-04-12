@@ -152,23 +152,36 @@ class TelegramHandler:
             self.telegram.send_message(help_text)
 
     def _handle_question(self, text: str):
-        """Handle natural language questions by searching vault."""
-        from .vault_search import search_vault, synthesize_answer
+        """Handle natural language questions with progressive disclosure."""
+        from .vault_search import search_vault
 
         try:
-            results = search_vault(self.config, text, max_results=5)
+            # Step 1: titles only (0 LLM calls)
+            results = search_vault(self.config, text, max_results=5, level="titles")
             if not results:
                 self.telegram.send_message("🔍 관련 노트를 찾지 못했습니다.")
                 return
 
-            answer = synthesize_answer(self.brain.hands.summarizer, text, results)
+            # Format title-level results
+            lines = []
+            for i, r in enumerate(results[:5], 1):
+                title = escape_html(r.get("title", "Untitled"))
+                cat = escape_html(r.get("category", ""))
+                rel = r.get("relevance", 0)
+                lines.append(f"{i}. <b>{title}</b> [{cat}] ({rel:.0%})")
 
-            sources = "\n".join(
-                f"  📄 {escape_html(r.get('title', 'Untitled'))}"
-                for r in results[:3]
-            )
-            response = f"💡 {escape_html(answer)}\n\n<b>참고 노트:</b>\n{sources}"
-            self.telegram.send_message(response)
+            msg = f"🔍 <b>{escape_html(text)}</b> 검색 결과:\n\n" + "\n".join(lines)
+
+            # Add inline keyboard for deeper levels
+            # Encode query in callback data (truncate to fit Telegram 64-byte limit)
+            q_short = text[:40]
+            keyboard = {
+                "inline_keyboard": [[
+                    {"text": "📋 요약 보기", "callback_data": f"vs_sum_{q_short}"},
+                    {"text": "💡 상세 답변", "callback_data": f"vs_full_{q_short}"},
+                ]]
+            }
+            self.telegram.send_message_with_keyboard(msg, keyboard)
         except Exception as e:
             logger.error("Question handling failed: %s", e)
             self.telegram.send_message(f"❌ 질문 처리 실패: {escape_html(str(e))}")
@@ -201,6 +214,11 @@ class TelegramHandler:
         callback_id = callback_query.get("id")
         data = callback_query.get("data", "")
 
+        # Vault search progressive disclosure callbacks
+        if data.startswith("vs_sum_") or data.startswith("vs_full_"):
+            self._handle_vault_search_callback(callback_query)
+            return
+
         # Prompt rating feedback (Phase C — self-improving)
         if data.startswith("rate_"):
             self._handle_rating_callback(callback_query)
@@ -228,6 +246,45 @@ class TelegramHandler:
         elif data.startswith("useful_") or data.startswith("skip_"):
             # Legacy Phase A callbacks (retained for backward compat)
             self.telegram.answer_callback_query(callback_id, text="피드백 감사합니다!")
+
+    def _handle_vault_search_callback(self, callback_query: dict):
+        """Handle progressive disclosure callbacks for vault search."""
+        from .vault_search import search_vault
+
+        callback_id = callback_query.get("id")
+        data = callback_query.get("data", "")
+
+        if data.startswith("vs_sum_"):
+            level = "summaries"
+            query = data[7:]  # after "vs_sum_"
+            ack_text = "요약을 생성합니다..."
+        else:  # vs_full_
+            level = "full"
+            query = data[8:]  # after "vs_full_"
+            ack_text = "상세 답변을 생성합니다..."
+
+        self.telegram.answer_callback_query(callback_id, text=ack_text)
+
+        try:
+            result = search_vault(
+                self.config, query, max_results=5, level=level,
+                summarizer=self.brain.hands.summarizer,
+            )
+
+            if level == "summaries":
+                lines = []
+                for r in result[:5]:
+                    title = escape_html(r.get("title", "Untitled"))
+                    summary = escape_html(r.get("summary", ""))
+                    lines.append(f"📄 <b>{title}</b>\n   {summary}")
+                msg = "\n\n".join(lines)
+            else:  # full
+                msg = f"💡 {escape_html(result)}" if isinstance(result, str) else "❌ 답변 생성 실패"
+
+            self.telegram.send_message(msg)
+        except Exception as e:
+            logger.error("Vault search callback failed: %s", e)
+            self.telegram.send_message(f"❌ 오류: {escape_html(str(e))}")
 
     def _handle_engagement_callback(self, callback_query: dict):
         """Handle engagement feedback buttons (👍/👎/📌)."""
