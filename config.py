@@ -58,12 +58,14 @@ class Config:
         # Agent / GBrain settings
         agent_cfg = cfg.get("agent", {})
         self.agent_mode = os.environ.get("AGENT_MODE") or agent_cfg.get("mode", "disabled")
-        self.dream_cycle = agent_cfg.get("dream_cycle", True)
+        # GBrain features default to True only when agent_mode is not disabled
+        gbrain_default = self.agent_mode != "disabled"
+        self.dream_cycle = agent_cfg.get("dream_cycle", gbrain_default)
         self.dream_hour = agent_cfg.get("dream_hour", 3)
-        self.thought_capture = agent_cfg.get("thought_capture", True)
-        self.intent_classification = agent_cfg.get("intent_classification", True)
-        self.entity_detection = agent_cfg.get("entity_detection", True)
-        self.brain_first = agent_cfg.get("brain_first", True)
+        self.thought_capture = agent_cfg.get("thought_capture", gbrain_default)
+        self.intent_classification = agent_cfg.get("intent_classification", gbrain_default)
+        self.entity_detection = agent_cfg.get("entity_detection", gbrain_default)
+        self.brain_first = agent_cfg.get("brain_first", gbrain_default)
 
         # Schedule (merge with hardcoded defaults so missing entries still run)
         schedule = cfg.get("schedule", {})

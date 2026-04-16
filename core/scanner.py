@@ -488,7 +488,6 @@ def save_thought_to_vault(text, vault_path, summarizer=None):
 
     # Generate Compiled Truth via summarizer
     compiled_truth = ""
-    key_takeaways = []
     category = "personal"
     tags = ["thought", "inbox"]
 
@@ -528,11 +527,7 @@ def save_thought_to_vault(text, vault_path, summarizer=None):
 
     compiled_section = ""
     if compiled_truth:
-        compiled_section = f"\n## Compiled Truth\n\n{compiled_truth}\n"
-        if key_takeaways:
-            items = "\n".join(f"- {t}" for t in key_takeaways)
-            compiled_section += f"\n## Key Takeaways\n\n{items}\n"
-        compiled_section += "\n---\n"
+        compiled_section = f"\n## Compiled Truth\n\n{compiled_truth}\n\n---\n"
 
     timeline_section = (
         f"\n## Timeline\n\n"

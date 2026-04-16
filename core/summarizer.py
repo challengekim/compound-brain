@@ -270,7 +270,11 @@ class Summarizer:
             data = json.loads(result)
             valid_intents = {"save_thought", "query", "command", "casual"}
             if data.get("intent") in valid_intents:
-                return data
+                return {
+                    "intent": data["intent"],
+                    "confidence": float(data.get("confidence", 0.5)),
+                    "topic": str(data.get("topic", ""))[:100],
+                }
         except Exception as e:
             logger.debug(f"Intent classification failed: {e}")
         # Heuristic fallback
@@ -314,7 +318,15 @@ class Summarizer:
             result = self._generate(prompt)
             result = _re.sub(r'^```(?:json)?\s*', '', result.strip())
             result = _re.sub(r'\s*```$', '', result)
-            return json.loads(result)
+            data = json.loads(result)
+            validated = {
+                "compiled_truth": str(data.get("compiled_truth", "")),
+                "key_takeaways": [
+                    str(t) for t in data.get("key_takeaways", [])
+                    if isinstance(t, (str, int, float)) and str(t).strip()
+                ],
+            }
+            return validated
         except Exception as e:
             logger.debug(f"Note enrichment failed: {e}")
         return {}
