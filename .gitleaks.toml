@@ -5,7 +5,7 @@ useDefault = true
 [allowlist]
 description = "Allow example/placeholder values"
 regexes = [
-  '''your-.*-token''',
-  '''placeholder''',
-  '''example''',
+  '''(?i)^your-.*-token$''',
+  '''(?i)^placeholder$''',
+  '''(?i)^example[-_]''',
 ]
